@@ -1,9 +1,9 @@
-# Load needed assemblies 
+# Załadowanie potrzebnych zależności
 [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.SMO") | Out-Null; 
 [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.SMOExtended")| Out-Null; 
 
 
-#######################
+####################### Funkcja łączy się z serwerem i wynik zapytania
 function Get-SqlData
 {
     param([string]$serverName=$(throw 'serverName is required.'), [string]$databaseName=$(throw 'databaseName is required.'),
@@ -19,7 +19,7 @@ function Get-SqlData
 
 } #Get-SqlData
 
-#######################
+####################### Funkcja zwracająca metadane bazy
 function Get-SqlMeta
 {
     param($serverName, $DatabaseName, $schema='dbo', $name)
@@ -113,31 +113,7 @@ FOR XML AUTO, ELEMENTS, ROOT('root')
 
 } #Get-SqlMeta
 
-#######################
-Function Get-yUMLDiagram {
-    param(
-        $yUML, 
-		$table,
-		$imagesFilePath,
-        [switch]$download
-
-    )
-    
-    $base = "http://yuml.me/diagram/scruffy/class/"
-    $address = $base + $yUML
-    
-    
-    if($download) { 
-	 $imagesFilePath = "$env:USERPROFILE\database_documentation\"+$db.Name+"\images\"; 
-	 $diagramFileName=$imagesFilePath+$table.Name+".jpg"
-     $wc = New-Object Net.WebClient
-		$wc.DownloadFile($address, $diagramFileName)
-    } else {
-        $address
-    }
-}
-
-#######################
+####################### Funkcja konwertuje metadane otrzymane z zapytania na dane potrzebne do yUML
 function ConvertTo-yUML {
     param ([xml]$meta)
 
@@ -161,8 +137,33 @@ function ConvertTo-yUML {
     $r
 
 } #ConvertTo-yUML
- 
-# Simple to function to write html pages 
+
+####################### Funkcja generująca diagramy UML'owe poprzez WebService yUML
+Function Get-yUMLDiagram {
+    param(
+        $yUML, 
+		$table,
+		$imagesFilePath,
+        [switch]$download
+
+    )
+    
+    $base = "http://yuml.me/diagram/scruffy/class/"
+    $address = $base + $yUML
+    
+    
+    if($download) { 
+	 $imagesFilePath = "$env:USERPROFILE\database_documentation\"+$db.Name+"\images\"; 
+	 $diagramFileName=$imagesFilePath+$table.Name+".jpg"
+     $wc = New-Object Net.WebClient
+		$wc.DownloadFile($address, $diagramFileName)
+    } else {
+        $address
+    }
+}
+
+
+# Funkcja tworząca stronę html
 function writeHtmlPage 
 { 
     param ($title, $heading, $body, $filePath); 
@@ -178,7 +179,7 @@ function writeHtmlPage
     $html | Out-File -FilePath $filePath; 
 } 
  
-# Return all user databases on a sql server 
+# Pobiera wszystkie bazy danych na wskazanym serwerze
 function getDatabases 
 { 
     param ($sql_server); 
@@ -186,7 +187,7 @@ function getDatabases
     return $databases; 
 } 
  
-# Get all schemata in a database 
+# Pobiera wszystkie schematy dla bazy danych
 function getDatabaseSchemata 
 { 
     param ($sql_server, $database); 
@@ -195,7 +196,7 @@ function getDatabaseSchemata
     return $schemata; 
 } 
  
-# Get all tables in a database 
+# Pobiera wszystkie tabele dla bazy danych
 function getDatabaseTables 
 { 
     param ($sql_server, $database); 
@@ -204,7 +205,7 @@ function getDatabaseTables
     return $tables; 
 } 
  
-# Get all stored procedures in a database 
+# Pobiera wszystkie procedury dla bazy danych
 function getDatabaseStoredProcedures 
 { 
     param ($sql_server, $database); 
@@ -213,7 +214,7 @@ function getDatabaseStoredProcedures
     return $procs; 
 } 
  
-# Get all user defined functions in a database 
+# Pobiera wszystkie funkcje dla bazy danych
 function getDatabaseFunctions 
 { 
     param ($sql_server, $database); 
@@ -222,7 +223,7 @@ function getDatabaseFunctions
     return $functions; 
 } 
  
-# Get all views in a database 
+# Pobiera widoki dla bazy danych
 function getDatabaseViews 
 { 
     param ($sql_server, $database); 
@@ -231,7 +232,7 @@ function getDatabaseViews
     return $views; 
 } 
  
-# Get all table triggers in a database 
+# Pobiera triggery dla bazy danych
 function getDatabaseTriggers 
 { 
     param ($sql_server, $database); 
@@ -245,14 +246,14 @@ function getDatabaseTriggers
     return $triggers; 
 } 
  
-# This function builds a list of links for database object types 
+# Tworzy linki między obiektami
 function buildLinkList 
 { 
     param ($array, $path); 
     $output = "<ul>"; 
     foreach($item in $array) 
     { 
-        if($item.IsSystemObject -eq $false) # Exclude system objects 
+        if($item.IsSystemObject -eq $false) # Wyklucz obiekty systemowe
         {     
             if([string]$item.GetType() -eq "Microsoft.SqlServer.Management.Smo.Schema") 
             { 
@@ -272,12 +273,12 @@ function buildLinkList
     return $output; 
 } 
  
-# Return the DDL for a given database object 
+# Zwraca DDL dla danego obiektu bazodanowego
 function getObjectDefinition 
 { 
     param ($item); 
     $definition = ""; 
-    # Schemas don't like our scripting options 
+    # Schematy nie lubią "ScriptingOprions"
     if([string]$item.GetType() -eq "Microsoft.SqlServer.Management.Smo.Schema") 
     { 
         $definition = $item.Script(); 
@@ -292,8 +293,7 @@ function getObjectDefinition
     return "<pre>$definition</pre>"; 
 } 
  
-# This function will get the comments on objects 
-# MS calls these MS_Descriptionn when you add them through SSMS 
+# Funkcja zwraca komentarze przypisane do obiektu poprzez SSMS
 function getDescriptionExtendedProperty 
 { 
     param ($item); 
@@ -308,7 +308,7 @@ function getDescriptionExtendedProperty
     return $description; 
 } 
  
-# Gets the parameters for a Stored Procedure 
+# PObiera parametry dla stored procedures
 function getProcParameterTable 
 { 
     param ($proc); 
@@ -317,7 +317,7 @@ function getProcParameterTable
     return $prms; 
 } 
  
-# Returns a html table of column details for a db table 
+# Zwraca tabelę html ze szczegółami tabeli
 function getTableColumnTable 
 { 
     param ($table); 
@@ -340,6 +340,7 @@ function getTableColumnTable
     return $cols; 
 } 
 
+#Pobiera diagram UML dla tabeli
 function getTableUML
 {
 	param ($table, $imagesFilePath); 
@@ -351,7 +352,7 @@ function getTableUML
     
 }
  
-# Returns a html table containing trigger details 
+# Zwraca tabelę htmlową ze szczegółami triggera
 function getTriggerDetailsTable 
 { 
     param ($trigger); 
@@ -359,12 +360,12 @@ function getTriggerDetailsTable
     return $trigger_details; 
 } 
  
-# This function creates all the html pages for our database objects 
+# Funkcja tworzy wszystkie strony html dla obiektów
 function createObjectTypePages 
 { 
     param ($objectName, $objectArray, $filePath, $db, $imagesFilePath); 
     New-Item -Path $($filePath + $db.Name + "\$objectName") -ItemType directory -Force | Out-Null; 
-    # Create index page for object type 
+    # Stwórz stronę indexową dla obiektu
     $page = $filePath + $($db.Name) + "\$objectName\index.html"; 
     $list = buildLinkList $objectArray ""; 
     if($objectArray -eq $null) 
@@ -372,12 +373,12 @@ function createObjectTypePages
         $list = "No $objectName in $db"; 
     } 
     writeHtmlPage $objectName $objectName $list $page; 
-    # Individual object pages 
+    # Poszczególne strony
     if($objectArray.Count -gt 0) 
     { 
         foreach ($item in $objectArray) 
         { 
-            if($item.IsSystemObject -eq $false) # Exclude system objects 
+            if($item.IsSystemObject -eq $false) # Wyklucz obiekty systemowe 
             { 
                 $description = getDescriptionExtendedProperty($item); 
                 $body = "<h2>Description</h2>$description"; 
@@ -435,30 +436,30 @@ function createObjectTypePages
     } 
 } 
  
-# Root directory where the html documentation will be generated 
+# Ścieżka gdzie dokumentacja zostanie wygenerowana
 $filePath = "$env:USERPROFILE\database_documentation\"; 
 New-Item -Path $filePath -ItemType directory -Force | Out-Null; 
-# sql server that hosts the databases we wish to document 
+# SQL SERVER dla którego generujemy dokumentacje
 $sql_server = New-Object Microsoft.SqlServer.Management.Smo.Server localhost; 
-# IsSystemObject not returned by default so ask SMO for it 
+# IsSystemObject nie są zwracane defaultowo
 $sql_server.SetDefaultInitFields([Microsoft.SqlServer.Management.SMO.Table], "IsSystemObject"); 
 $sql_server.SetDefaultInitFields([Microsoft.SqlServer.Management.SMO.View], "IsSystemObject"); 
 $sql_server.SetDefaultInitFields([Microsoft.SqlServer.Management.SMO.StoredProcedure], "IsSystemObject"); 
 $sql_server.SetDefaultInitFields([Microsoft.SqlServer.Management.SMO.Trigger], "IsSystemObject"); 
  
-# Get databases on our server 
+# Pobierz bazy danych na serwerze
 $databases = getDatabases $sql_server; 
  
 foreach ($db in $databases) 
 { 
     Write-Host "Started documenting " $db.Name; 
-    # Directory for each database to keep everything tidy 
+    # Oddzielna ścieżka dla każdej z baz danych
     New-Item -Path $($filePath + $db.Name) -ItemType directory -Force | Out-Null; 
 	$imagesFilePath = $filePath + $db.Name + "\images\";
 	New-Item -Path $imagesFilePath -ItemType directory -Force | Out-Null; 
 
  
-    # Make a page for the database 
+    # Stwórz stronę dla bazy danych
     $db_page = $filePath + $($db.Name) + "\index.html"; 
     $body = "<ul> 
                 <li><a href='Schemata/index.html'>Schemata</a></li> 
@@ -470,27 +471,27 @@ foreach ($db in $databases)
             </ul>"; 
     writeHtmlPage $db $db $body $db_page; 
          
-    # Get schemata for the current database 
+    # Pobierz schematy dla tej bazy
     $schemata = getDatabaseSchemata $sql_server $db; 
     createObjectTypePages "Schemata" $schemata $filePath $db $imagesFilePath; 
     Write-Host "Documented schemata"; 
-    # Get tables for the current database 
+    # Pobierz tabele dla tej bazy
     $tables = getDatabaseTables $sql_server $db; 
     createObjectTypePages "Tables" $tables $filePath $db $imagesFilePath; 
     Write-Host "Documented tables"; 
-    # Get views for the current database 
+    # Pobierz widoki dla tej bazy
     $views = getDatabaseViews $sql_server $db; 
     createObjectTypePages "Views" $views $filePath $db $imagesFilePath; 
     Write-Host "Documented views"; 
-    # Get procs for the current database 
+    # Pobierz procedury dla tej bazy
     $procs = getDatabaseStoredProcedures $sql_server $db; 
     createObjectTypePages "Stored Procedures" $procs $filePath $db $imagesFilePath; 
     Write-Host "Documented stored procedures"; 
-    # Get functions for the current database 
+    # Pobierz funkcje dla tej bazy
     $functions = getDatabaseFunctions $sql_server $db; 
     createObjectTypePages "Functions" $functions $filePath $db $imagesFilePath; 
     Write-Host "Documented functions"; 
-    # Get triggers for the current database 
+    # Pobierz triggery dla tej bazy 
     $triggers = getDatabaseTriggers $sql_server $db; 
     createObjectTypePages "Triggers" $triggers $filePath $db $imagesFilePath; 
     Write-Host "Documented triggers"; 
