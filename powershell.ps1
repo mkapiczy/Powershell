@@ -128,7 +128,7 @@ Function Get-yUMLDiagram {
     
     
     if($download) { 
-	 $imagesFilePath = "$env:USERPROFILE\database_documentation\test\images\"; 
+	 $imagesFilePath = "$env:USERPROFILE\database_documentation\"+$db.Name+"\images\"; 
 	 $diagramFileName=$imagesFilePath+$table.Name+".jpg"
      $wc = New-Object Net.WebClient
 		$wc.DownloadFile($address, $diagramFileName)
@@ -343,9 +343,9 @@ function getTableColumnTable
 function getTableUML
 {
 	param ($table, $imagesFilePath); 
-    #Code to Test
 	$serverName = 'localhost';$databaseName = $db.Name; $schema='dbo';$name=$table.Name
 	$meta = Get-SqlMeta $serverName $databaseName $schema $name
+    #$meta[0] | Write-Host
 	$yUML = (ConvertTo-yUML $meta[0])
 	Get-yUMLDiagram $yUML $table $imagesFilePath -download
     
