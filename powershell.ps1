@@ -440,7 +440,7 @@ function createObjectTypePages
 $filePath = "$env:USERPROFILE\database_documentation\"; 
 New-Item -Path $filePath -ItemType directory -Force | Out-Null; 
 # SQL SERVER dla którego generujemy dokumentacje
-$sql_server = New-Object Microsoft.SqlServer.Management.Smo.Server localhost; 
+$sql_server = New-Object Microsoft.SqlServer.Management.Smo.Server $args[0]; 
 # IsSystemObject nie są zwracane defaultowo
 $sql_server.SetDefaultInitFields([Microsoft.SqlServer.Management.SMO.Table], "IsSystemObject"); 
 $sql_server.SetDefaultInitFields([Microsoft.SqlServer.Management.SMO.View], "IsSystemObject"); 
